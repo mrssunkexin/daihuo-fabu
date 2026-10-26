@@ -48,9 +48,10 @@ h1{{font-size:22px;margin:0}}header p{{margin:4px 0 0;color:var(--muted);font-si
 .copy.ok{{background:#3aa08f;color:#fff}}.copy.all{{width:100%;padding:10px;font-size:14px}}
 .stats{{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}}.stat{{border-radius:10px;padding:6px 12px;font-size:14px;background:var(--card);border:1px solid var(--line)}}
 .stat b{{font-size:18px;margin-left:4px}}.stat.done b{{color:#3aa08f}}.stat.todo b{{color:var(--accent)}}
+.copylist{{margin-top:10px;border:1px solid var(--accent);background:var(--card);color:var(--accent);border-radius:10px;padding:8px 14px;font:inherit;font-size:14px;width:100%}}.copylist.ok{{background:#3aa08f;border-color:#3aa08f;color:#fff}}
 .hide{{display:none}}
 </style></head><body><div class="wrap">
-<header><h1>带货发布文案</h1><div class="stats"><span class="stat">共<b id="n-all">{len(items)}</b></span><span class="stat done">已发<b id="n-done">0</b></span><span class="stat todo">未发<b id="n-todo">{len(items)}</b></span></div><p>最新的在最上面 · 更新于 {now}</p></header>
+<header><h1>带货发布文案</h1><div class="stats"><span class="stat">共<b id="n-all">{len(items)}</b></span><span class="stat done">已发<b id="n-done">0</b></span><span class="stat todo">未发<b id="n-todo">{len(items)}</b></span></div><button class="copylist" type="button">复制已发清单（发给 Claude 同步台账）</button><p>最新的在最上面 · 更新于 {now}</p></header>
 <div class="tabs"><button type="button" data-f="all" aria-pressed="true">全部</button><button type="button" data-f="todo" aria-pressed="false">未发</button><button type="button" data-f="done" aria-pressed="false">已发</button></div>
 <main class="list">
 {cards}
@@ -62,6 +63,9 @@ function save(){{try{{localStorage.setItem("daihuo_done",JSON.stringify(done))}}
 var filter="all";
 function paint(){{var cs=document.querySelectorAll(".card"),nd=0;cs.forEach(function(c){{if(done[c.dataset.id])nd++}});document.getElementById("n-all").textContent=cs.length;document.getElementById("n-done").textContent=nd;document.getElementById("n-todo").textContent=cs.length-nd;cs.forEach(function(c){{var d=!!done[c.dataset.id];c.classList.toggle("done",d);c.querySelector(".mark").textContent=d?"已发 ✓":"标记已发";c.classList.toggle("hide",filter==="todo"&&d||filter==="done"&&!d)}})}}
 document.addEventListener("click",function(e){{var b=e.target.closest("button");if(!b)return;
+if(b.classList.contains("copylist")){{var ds=[],ts=[];document.querySelectorAll(".card").forEach(function(c){{(done[c.dataset.id]?ds:ts).push(c.dataset.id)}});
+var txt="带货发布文案 已发清单（"+new Date().toLocaleString("zh-CN",{{hour12:false}})+"）\\n已发 "+ds.length+" 条："+(ds.join("、")||"无")+"\\n未发 "+ts.length+" 条："+(ts.join("、")||"无");
+var o=b.textContent;copyText(txt).then(function(){{b.textContent="已复制 ✓ 直接粘贴发给 Claude";b.classList.add("ok")}},function(){{b.textContent="复制失败，请截图"}}).then(function(){{setTimeout(function(){{b.textContent=o;b.classList.remove("ok")}},1800)}});return}}
 if(b.dataset.f){{filter=b.dataset.f;document.querySelectorAll(".tabs button").forEach(function(x){{x.setAttribute("aria-pressed",x===b)}});paint();return}}
 var card=b.closest(".card");if(!card)return;
 if(b.classList.contains("mark")){{var id=card.dataset.id;if(done[id])delete done[id];else done[id]=1;save();paint();return}}
